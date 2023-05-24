@@ -1,0 +1,81 @@
+agent Mono {
+  state {
+    location: inicio
+    hasBanana: false
+    hasCaja: false
+  }
+
+  goal {
+    state.hasBanana == true
+  }
+
+  onAction alcanzarBanana {
+    pre {
+      state.location == inicio && state.hasCaja == true && state.hasBanana == false
+    }
+    effects {
+      state.hasBanana = true
+    }
+  }
+
+  onAction moverCaja {
+    pre {
+      state.location == inicio && state.hasCaja == false
+    }
+    effects {
+      state.hasCaja = true
+    }
+  }
+}
+
+environment Juego {
+  state {
+    bananaLocation: inicio
+    cajaLocation: inicio
+  }
+
+  percept {
+    [Mono] {
+      location: bananaLocation
+    }
+  }
+
+  onAction moverCaja {
+    pre {
+      state.cajaLocation == inicio
+    }
+    effects {
+      state.cajaLocation = fin
+    }
+  }
+
+  onAction alcanzarBanana {
+    pre {
+      state.bananaLocation == inicio
+    }
+    effects {
+      state.bananaLocation = fin
+    }
+  }
+}
+
+implementation {
+  Mono extends AgentProgram {
+    action alcanzarBanana() {
+      if (state.location == inicio && state.hasCaja && !state.hasBanana) {
+        emit(alcanzarBanana)
+      }
+    }
+
+    action moverCaja() {
+      if (state.location == inicio && !state.hasCaja) {
+        emit(moverCaja)
+      }
+    }
+  }
+}
+
+system {
+  environment: Juego
+  agents: Mono
+}
