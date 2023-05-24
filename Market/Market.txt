@@ -1,0 +1,74 @@
+agent Clientes {
+  state {
+    id: ""
+    nombre: ""
+    correo: ""
+    cel: ""
+  }
+
+  action realizarCompra(ordenCompra) {
+    effects {
+      emit(compraRealizada, ordenCompra)
+    }
+  }
+}
+
+agent Catálogo {
+  state {
+    smartWatches: []
+    smartphones: []
+    tablets: []
+  }
+
+  event compraRealizada {
+    propiedades: ordenCompra
+  }
+
+  rule "Oferta: Compra iPhone 14 con tarjeta Banamex (24 meses sin intereses)"
+  salience 10
+  when
+    $c: Clientes
+    $p: Catálogo
+    $oc: compraRealizada { propiedades: { producto: "iPhone 14", tarjeta: "Banamex" } }
+    exists(smartphone: Smartphone(marca == "Apple", modelo == "iPhone 14"))
+    exists(tarjeta: TarjetaCredito(marca == "Banamex"))
+  then
+    print("Oferta: En la compra de un iPhone 14 con tarjeta Banamex, ofrecemos 24 meses sin intereses.");
+  end
+
+  rule "Oferta: Compra Tablet SamsungX con tarjeta de Liverpool VISA (12 meses sin intereses)"
+  salience 10
+  when
+    $c: Clientes
+    $p: Catálogo
+    $oc: compraRealizada { propiedades: { producto: "Tablet SamsungX", tarjeta: "Liverpool VISA" } }
+    exists(tablet: Tablet(marca == "Samsung", modelo == "SamsungX"))
+    exists(tarjeta: TarjetaCredito(marca == "Liverpool VISA"))
+  then
+    print("Oferta: En la compra de una Tablet SamsungX con tarjeta de Liverpool VISA, ofrecemos 12 meses sin intereses.");
+  end
+
+  rule "Oferta: Compra al contado de AppleWatch y iPhone 14 (100 pesos en vales por cada 1000 pesos)"
+  salience 10
+  when
+    $c: Clientes
+    $p: Catálogo
+    $oc: compraRealizada { propiedades: { producto1: "AppleWatch", producto2: "iPhone 14", formaPago: "contado" } }
+    exists(smartwatch: SmartWatch(marca == "Apple"))
+    exists(smartphone: Smartphone(marca == "Apple", modelo == "iPhone 14"))
+  then
+    totalCompra = smartwatch.precio + smartphone.precio;
+    vales = floor(totalCompra / 1000) * 100;
+    print("Oferta: En la compra al contado de un AppleWatch y un iPhone 14, ofrecemos ", vales, " pesos en vales por cada 1000 pesos de compra.");
+  end
+
+  rule "Descuento: Compra de Smartphone (15% de descuento en funda y mica)"
+  salience 10
+  when
+    $c: Clientes
+    $p: Catálogo
+    $oc: compraRealizada { propiedades: { producto: "Smartphone" } }
+    exists(smartphone: Smartphone())
+  then
+    descuento = 15;
+    print("Descuento: En la compra de un Smartphone, ofrecemos una funda y mica con un 15% de descuento.");
